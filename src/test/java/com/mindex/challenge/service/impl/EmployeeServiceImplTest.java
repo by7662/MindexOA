@@ -84,37 +84,52 @@ public class EmployeeServiceImplTest {
 
 
         // Report checks
-        // Create two local employee object
-        // Call create API to add them to database
-        // Read to make sure
-        // Update and get a remote employee object. at the same time we update one of our local employee object then compare
-        Employee belowEmployee = new Employee();
-        belowEmployee.setFirstName("Ringo");
-        belowEmployee.setLastName("Starr");
-        belowEmployee.setDepartment("Engineering");
-        belowEmployee.setPosition("Developer V");
+
+        // Create test employee that is top at the tree, ready to stub two test employee in direct reports
+        Employee topEmployee = new Employee();
+        topEmployee.setFirstName("Ringo");
+        topEmployee.setLastName("Starr");
+        topEmployee.setDepartment("Engineering");
+        topEmployee.setPosition("Developer V");
+
+        // Create test employee that is foot node of the direct report tree
+        Employee belowEmployee2 = new Employee();
+        belowEmployee2.setFirstName("Paul");
+        belowEmployee2.setLastName("McCartney");
+        belowEmployee2.setDepartment("Engineering");
+        belowEmployee2.setPosition("Developer I");
+        // Create this employee to obtain employeeId and make existence in the database
+        Employee createdBelowEmployee2 = restTemplate.postForEntity(employeeUrl, belowEmployee2, Employee.class).getBody();
+        assertNotNull(createdBelowEmployee2.getEmployeeId());
+        // Add this employee to a list, ready to add into its parent direct reports
+        ArrayList<Employee> reportList2 = new ArrayList<>();
+        reportList2.add(createdBelowEmployee2);
+
+        // Create test employee that is child of "topEmployee" and parent of "belowEmployee2"
+        Employee belowEmployee1 = new Employee();
+        belowEmployee1.setFirstName("John");
+        belowEmployee1.setLastName("Lennon");
+        belowEmployee1.setDepartment("Engineering");
+        belowEmployee1.setPosition("Development Manager");
+        // Add child node to direct report list
+        belowEmployee1.setDirectReports(reportList2);
+        // Create this employee along with stubbed direct report list for the same reason
+        // (obtain employee id and make existence in the database)
+        Employee createdBelowEmployee1 = restTemplate.postForEntity(employeeUrl, belowEmployee1, Employee.class).getBody();
+        assertNotNull(createdBelowEmployee1.getEmployeeId());
+
+        // Add "belowEmployee" to a list, ready to stub "topEmployee" direct reports list
+        ArrayList<Employee> reportList1 = new ArrayList<>();
+        reportList1.add(createdBelowEmployee1);
+        topEmployee.setDirectReports(reportList1);
 
         // Created new employee with endpoint for the testing report feature and obtain unique employeeId
-        Employee createdBelowEmployee = restTemplate.postForEntity(employeeUrl, belowEmployee, Employee.class).getBody();
-        assertNotNull(createdBelowEmployee.getEmployeeId());
+        Employee createdTopEmployee = restTemplate.postForEntity(employeeUrl, topEmployee, Employee.class).getBody();
+        assertNotNull(createdTopEmployee.getEmployeeId());
 
-        belowEmployee.setEmployeeId(createdBelowEmployee.getEmployeeId());
-        ArrayList<Employee> reportList = new ArrayList<>();
-        reportList.add(createdBelowEmployee);
-        testEmployee.setDirectReports(reportList);
-
-        Employee updatedTestEmployee =
-                restTemplate.exchange(employeeIdUrl,
-                        HttpMethod.PUT,
-                        new HttpEntity<Employee>(testEmployee, headers),
-                        Employee.class,
-                        testEmployee.getEmployeeId()).getBody();
-
-        System.out.println(updatedTestEmployee.getEmployeeId());
-        assertNotNull(updatedTestEmployee.getDirectReports());
-        System.out.println(updatedTestEmployee.getDirectReports());
-        ReportingStructure reports = restTemplate.getForEntity(reportUrl, ReportingStructure.class, updatedTestEmployee.getEmployeeId()).getBody();
-        assertEquals(reports.getNumberOfReports(), 1);
+        // Run getNumberOfReports API endpoint for testing purpose
+        ReportingStructure reports = restTemplate.getForEntity(reportUrl, ReportingStructure.class, createdTopEmployee.getEmployeeId()).getBody();
+        assertEquals(reports.getNumberOfReports(), 2);
     }
 
     private static void assertEmployeeEquivalence(Employee expected, Employee actual) {
