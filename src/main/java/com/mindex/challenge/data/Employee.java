@@ -29,6 +29,14 @@ public class Employee {
         this.firstName = firstName;
     }
 
+    public List<Employee> getDirectReports() {
+        return directReports;
+    }
+
+    public void setDirectReports(List<Employee> directReports) {
+        this.directReports = directReports;
+    }
+
     public String getLastName() {
         return lastName;
     }
@@ -53,11 +61,5 @@ public class Employee {
         this.department = department;
     }
 
-    public List<Employee> getDirectReports() {
-        return directReports;
-    }
 
-    public void setDirectReports(List<Employee> directReports) {
-        this.directReports = directReports;
-    }
 }

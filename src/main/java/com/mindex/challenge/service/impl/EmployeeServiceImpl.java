@@ -48,12 +48,21 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.save(employee);
     }
 
+    /**
+     * Retrieves/Calculate the number of reports from given employee id
+     * @param id the given employee id that we want to calculate number of reports
+     * @return the total number of reports associated with the given employee
+     */
     @Override
     public ReportingStructure getNumberOfReports(String id) {
         LOG.debug("Getting number of reports for employee with id [{}]", id);
-        int numberOfReports = 0;
+        // Get the employee object that we want to perform number of reports
         Employee employee = employeeRepository.findByEmployeeId(id);
+        if (employee == null) {
+            throw new RuntimeException("Invalid employeeId: " + id);
+        }
 
+        // Creating our reporting structure object
         ReportingStructure reportingStructure = new ReportingStructure();
         reportingStructure.setEmployee(employee);
         reportingStructure.setNumberOfReports(calculateNumberOfReports(employee));
@@ -61,17 +70,26 @@ public class EmployeeServiceImpl implements EmployeeService {
         return reportingStructure;
     }
 
+    /**
+     * Helper method that calculates total reports from employee recursively
+     * @param employee the given employee that we want to calculate from
+     * @return the total number of reports from given employee
+     */
     private int calculateNumberOfReports(Employee employee) {
         // Calculation should happen here
 
-        // Checking null and empty because we do not know if employee does not have direct reports, what is the return value
+        // Base case: if employee has null or is empty for direct reports, we want to return 0
         if (employee.getDirectReports() == null || employee.getDirectReports().isEmpty()) {
             return 0;
         }
 
+        // If list is not empty, we store the size of list
         int totalReports = employee.getDirectReports().size();
+        // For every employee from the list, we recursively compute the calculation
+        // of number of reports and add to total reports
         for (Employee report : employee.getDirectReports()) {
-            totalReports += calculateNumberOfReports(report);
+            Employee nextEmployee = employeeRepository.findByEmployeeId(report.getEmployeeId());
+            totalReports += calculateNumberOfReports(nextEmployee);
         }
 
         return totalReports;

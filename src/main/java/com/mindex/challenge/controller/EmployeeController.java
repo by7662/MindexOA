@@ -37,10 +37,12 @@ public class EmployeeController {
         return employeeService.update(employee);
     }
 
-    @GetMapping("/employee/numberOfReports/{id}")
+    @GetMapping("/employee/reports/{id}")
     public ReportingStructure getNumberOfReports(@PathVariable String id){
         LOG.debug("Received employee number of reports request for id [{}]", id);
 
+        // Since we do not plan to persist and aim to compute on the fly, we will
+        // do the calculation inside employee service
         return employeeService.getNumberOfReports(id);
     }
 }
